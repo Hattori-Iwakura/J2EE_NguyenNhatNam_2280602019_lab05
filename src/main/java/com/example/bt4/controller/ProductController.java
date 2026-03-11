@@ -58,7 +58,7 @@ public class ProductController {
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable int id, Model model) {
+    public String edit(@PathVariable Long id, Model model) {
         Product product = productService.get(id);
         if (product == null) {
             return "redirect:/products";
@@ -88,7 +88,7 @@ public class ProductController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable int id) {
+    public String delete(@PathVariable Long id) {
         productService.delete(id);
         return "redirect:/products";
     }

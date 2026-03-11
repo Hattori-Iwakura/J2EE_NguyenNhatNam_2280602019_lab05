@@ -1,28 +1,24 @@
 package com.example.bt4.service;
 
-import com.example.bt4.model.Category;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.bt4.model.Category;
+import com.example.bt4.repository.CategoryRepository;
 
 @Service
 public class CategoryService {
-    private List<Category> listCategory = new ArrayList<>();
 
-    public CategoryService() {
-        listCategory.add(new Category(1, "Điện thoại"));
-        listCategory.add(new Category(2, "Laptop"));
-    }
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     public List<Category> getAll() {
-        return listCategory;
+        return categoryRepository.findAll();
     }
 
     public Category get(int id) {
-        return listCategory.stream()
-                .filter(c -> c.getId() == id)
-                .findFirst()
-                .orElse(null);
+        return categoryRepository.findById(id).orElse(null);
     }
 }

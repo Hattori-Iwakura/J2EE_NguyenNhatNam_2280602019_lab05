@@ -1,94 +1,176 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>List products</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Danh sách sản phẩm</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .page-header { background: linear-gradient(135deg, #0f172a, #1e3a5f); color: #fff; padding: 2rem 0 1.5rem; margin-bottom: 2rem; }
+        .page-header h1 { font-weight: 700; font-size: 1.75rem; }
+        .filter-card { background: #fff; border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 1.5rem; }
+        .product-table { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
+        .product-table thead { background: #0f172a; color: #fff; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+        .product-table thead th { padding: .9rem 1rem; font-weight: 600; border: none; }
+        .product-table tbody tr { transition: background .15s; }
+        .product-table tbody tr:hover { background: #f8fafc; }
+        .product-table tbody td { padding: .85rem 1rem; vertical-align: middle; border-color: #f1f5f9; font-size: .9rem; }
+        .product-img { width: 72px; height: 72px; object-fit: contain; border-radius: 8px; background: #f8fafc; padding: 4px; border: 1px solid #e2e8f0; }
+        .product-name { font-weight: 600; color: #0f172a; }
+        .price-badge { font-weight: 700; color: #16a34a; font-size: .95rem; }
+        .cat-badge { background: #eff6ff; color: #2563eb; padding: .3rem .75rem; border-radius: 50px; font-size: .78rem; font-weight: 600; }
+        .btn-edit { background: #f1f5f9; color: #334155; border: none; padding: .35rem .8rem; border-radius: 7px; font-size: .82rem; font-weight: 600; transition: all .2s; }
+        .btn-edit:hover { background: #3b82f6; color: #fff; }
+        .btn-del { background: #fff1f2; color: #e11d48; border: none; padding: .35rem .8rem; border-radius: 7px; font-size: .82rem; font-weight: 600; transition: all .2s; }
+        .btn-del:hover { background: #e11d48; color: #fff; }
+        .category-tag { border: 1.5px solid #e2e8f0; border-radius: 50px; padding: .3rem .9rem; font-size: .82rem; font-weight: 500; color: #475569; cursor: pointer; transition: all .2s; text-decoration: none; }
+        .category-tag:hover, .category-tag.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .result-info { color: #64748b; font-size: .875rem; }
+        .empty-state { padding: 4rem 1rem; text-align: center; color: #94a3b8; }
+        .empty-state i { font-size: 3rem; }
+        .row-num { color: #94a3b8; font-size: .82rem; font-weight: 600; }
+    </style>
 </head>
 <body>
 <div th:replace="~{_layout :: navbar}"></div>
-<div class="container mt-4">
 
-    <!-- Search & Filter bar -->
-    <form th:action="@{/products}" method="get" class="row g-2 mb-3 align-items-center">
-        <div class="col-auto">
-            <input type="text" class="form-control" name="keyword" th:value="${keyword}"
-                   placeholder="Tìm kiếm sản phẩm...">
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1"><i class="bi bi-grid-fill me-2 text-warning"></i>Quản lý sản phẩm</h1>
+                <p class="mb-0 opacity-75 small">Danh sách tất cả sản phẩm trong hệ thống</p>
+            </div>
+            <a th:href="@{/products/create}" class="btn btn-warning fw-bold px-4">
+                <i class="bi bi-plus-lg me-1"></i>Thêm sản phẩm
+            </a>
         </div>
-        <div class="col-auto">
-            <select class="form-select" name="categoryId">
-                <option value="0" th:selected="${selectedCategoryId == 0}">-- Tất cả danh mục --</option>
-                <option th:each="c : ${categories}"
-                        th:value="${c.id}"
-                        th:text="${c.name}"
-                        th:selected="${selectedCategoryId == c.id}"></option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-            <a th:href="@{/products}" class="btn btn-secondary ms-1">Xóa lọc</a>
-        </div>
-        <div class="col-auto ms-auto">
-            <a th:href="@{/products/create}" class="btn btn-success">+ Thêm sản phẩm</a>
-        </div>
-    </form>
+    </div>
+</div>
 
-    <!-- Category pills -->
-    <div class="mb-3 d-flex gap-2 flex-wrap">
-        <a th:href="@{/products(keyword=${keyword})}"
-           th:classappend="${selectedCategoryId == 0} ? ' active' : ''"
-           class="btn btn-sm btn-outline-dark">Tất cả</a>
-        <a th:each="c : ${categories}"
-           th:href="@{/products(keyword=${keyword}, categoryId=${c.id})}"
-           th:text="${c.name}"
-           th:classappend="${selectedCategoryId == c.id} ? ' active' : ''"
-           class="btn btn-sm btn-outline-dark"></a>
+<div class="container pb-5">
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <form th:action="@{/products}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase mb-1">Tìm kiếm</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="keyword"
+                               th:value="${keyword}" placeholder="Tên sản phẩm...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary small text-uppercase mb-1">Danh mục</label>
+                    <select class="form-select" name="categoryId">
+                        <option value="0" th:selected="${selectedCategoryId == 0}">-- Tất cả danh mục --</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${selectedCategoryId == c.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary fw-semibold flex-fill">
+                        <i class="bi bi-funnel me-1"></i>Lọc
+                    </button>
+                    <a th:href="@{/products}" class="btn btn-light border fw-semibold flex-fill">
+                        <i class="bi bi-x-lg me-1"></i>Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+        <!-- Category tags -->
+        <div class="mt-3 d-flex gap-2 flex-wrap">
+            <a th:href="@{/products(keyword=${keyword})}" class="category-tag"
+               th:classappend="${selectedCategoryId == 0} ? ' active' : ''">Tất cả</a>
+            <a th:each="c : ${categories}"
+               th:href="@{/products(keyword=${keyword}, categoryId=${c.id})}"
+               th:text="${c.name}"
+               class="category-tag"
+               th:classappend="${selectedCategoryId == c.id} ? ' active' : ''"></a>
+        </div>
     </div>
 
-    <!-- Result count -->
-    <p class="text-muted small">
-        Tìm thấy <strong th:text="${#lists.size(listproduct)}"></strong> sản phẩm
-        <span th:if="${keyword != null and !keyword.isEmpty()}">
-            với từ khoá "<strong th:text="${keyword}"></strong>"
+    <!-- Result info -->
+    <div class="result-info mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle"></i>
+        Tìm thấy <strong th:text="${#lists.size(listproduct)}" class="text-dark mx-1">0</strong> sản phẩm
+        <span th:if="${keyword != null and !keyword.isEmpty()}"
+              class="badge bg-primary bg-opacity-10 text-primary fw-normal">
+            từ khoá: <em th:text="${keyword}"></em>
         </span>
-        <span th:if="${selectedCategoryId != 0}">
-            trong danh mục "<strong th:each="c : ${categories}" th:if="${c.id == selectedCategoryId}" th:text="${c.name}"></strong>"
+        <span th:if="${selectedCategoryId != 0}"
+              class="badge bg-success bg-opacity-10 text-success fw-normal">
+            danh mục: <span th:each="c : ${categories}" th:if="${c.id == selectedCategoryId}" th:text="${c.name}"></span>
         </span>
-    </p>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Name</th>
-            <th scope="col">Price</th>
-            <th scope="col">Image</th>
-            <th scope="col">Category Name</th>
-            <th scope="col"></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${listproduct}">
-            <td th:text="${product.id}"></td>
-            <td th:text="${product.name}"></td>
-            <td th:text="${product.price}"></td>
-            <td>
-                <img th:if="${product.image != null}" height="120" width="150"
-                     th:src="${product.image != null and product.image.startsWith('http') ? product.image : '/images/' + product.image}"
-                     th:alt="${product.name}" />
-            </td>
-            <td th:text="${product.category != null ? product.category.name : ''}"></td>
-            <td>
-                <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-secondary">Edit</a>
-                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-danger"
-                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">Delete</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    </div>
+
+    <!-- Table -->
+    <div class="product-table">
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th style="width:50px">#</th>
+                <th>Tên sản phẩm</th>
+                <th style="width:110px">Hình ảnh</th>
+                <th style="width:130px">Giá (VNĐ)</th>
+                <th style="width:140px">Danh mục</th>
+                <th style="width:150px" class="text-center">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(listproduct)}">
+                <td colspan="6">
+                    <div class="empty-state">
+                        <i class="bi bi-box-seam d-block mb-3"></i>
+                        <p class="fw-semibold mb-1">Không có sản phẩm nào</p>
+                        <p class="small">Hãy thêm sản phẩm đầu tiên của bạn</p>
+                        <a th:href="@{/products/create}" class="btn btn-primary mt-2">+ Thêm ngay</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:each="product, iter : ${listproduct}">
+                <td><span class="row-num" th:text="${iter.count}"></span></td>
+                <td>
+                    <span class="product-name" th:text="${product.name}"></span>
+                </td>
+                <td>
+                    <img th:if="${product.image != null and !product.image.isEmpty()}"
+                         class="product-img"
+                         th:src="${product.image.startsWith('http') ? product.image : '/images/' + product.image}"
+                         th:alt="${product.name}" />
+                    <span th:if="${product.image == null or product.image.isEmpty()}"
+                          class="text-muted small"><i class="bi bi-image"></i></span>
+                </td>
+                <td>
+                    <span class="price-badge" th:text="${#numbers.formatInteger(product.price, 0, 'COMMA') + ' ₫'}"></span>
+                </td>
+                <td>
+                    <span class="cat-badge" th:text="${product.category != null ? product.category.name : 'N/A'}"></span>
+                </td>
+                <td class="text-center">
+                    <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn-edit me-1">
+                        <i class="bi bi-pencil me-1"></i>Sửa
+                    </a>
+                    <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn-del"
+                                onclick="return confirm('Xóa sản phẩm này?')">
+                            <i class="bi bi-trash me-1"></i>Xóa
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <div th:replace="~{_layout :: footer}"></div>
 </body>
 </html>
